@@ -2,6 +2,7 @@ import axios from 'axios';
 
 // Rate limiting configuration
 const MAX_REQUESTS_PER_MINUTE = 10;
+const MAX_REQUESTS_PER_DAY = 100; // Daily limit to avoid overusage
 const requestTimestamps: number[] = [];
 
 // API configuration
@@ -10,6 +11,10 @@ const API_TIMEOUT = 30000; // 30 seconds timeout
 
 // Debug flag to log API calls
 const DEBUG_API_CALLS = true;
+
+// Storage keys for persisting usage data
+const STORAGE_KEY_DAILY_COUNT = 'api_daily_request_count';
+const STORAGE_KEY_DATE = 'api_request_date';
 
 // Cache for building summaries to avoid repeated API calls
 interface BuildingSummaryCache {
@@ -34,21 +39,98 @@ const apiClient = axios.create({
   },
 });
 
+// Load daily request count from localStorage
+function loadDailyRequestCount(): number {
+  try {
+    const storedDate = localStorage.getItem(STORAGE_KEY_DATE);
+    const storedCount = localStorage.getItem(STORAGE_KEY_DAILY_COUNT);
+
+    // Check if we have stored data and if it's from today
+    if (storedDate && storedCount) {
+      const today = new Date().toDateString();
+      if (storedDate === today) {
+        return parseInt(storedCount, 10);
+      }
+    }
+
+    // If no data or from a different day, reset the count
+    resetDailyCount();
+    return 0;
+  } catch (error) {
+    console.error('Error loading daily request count:', error);
+    return 0;
+  }
+}
+
+// Save daily request count to localStorage
+function saveDailyRequestCount(count: number): void {
+  try {
+    const today = new Date().toDateString();
+    localStorage.setItem(STORAGE_KEY_DATE, today);
+    localStorage.setItem(STORAGE_KEY_DAILY_COUNT, count.toString());
+  } catch (error) {
+    console.error('Error saving daily request count:', error);
+  }
+}
+
+// Reset daily count (used when a new day starts)
+function resetDailyCount(): void {
+  try {
+    const today = new Date().toDateString();
+    localStorage.setItem(STORAGE_KEY_DATE, today);
+    localStorage.setItem(STORAGE_KEY_DAILY_COUNT, '0');
+  } catch (error) {
+    console.error('Error resetting daily count:', error);
+  }
+}
+
 // Check if we're within rate limits
 function checkRateLimit(): boolean {
   const now = Date.now();
+
+  // Check minute-based rate limit
   // Remove timestamps older than 1 minute
   const oneMinuteAgo = now - 60 * 1000;
   while (requestTimestamps.length > 0 && requestTimestamps[0] < oneMinuteAgo) {
     requestTimestamps.shift();
   }
 
-  return requestTimestamps.length < MAX_REQUESTS_PER_MINUTE;
+  // Check daily rate limit
+  const dailyCount = loadDailyRequestCount();
+
+  // Return true only if both limits are satisfied
+  return requestTimestamps.length < MAX_REQUESTS_PER_MINUTE && dailyCount < MAX_REQUESTS_PER_DAY;
 }
 
-// Add current timestamp to the requests array
+// Add current timestamp to the requests array and increment daily count
 function trackRequest(): void {
+  // Track for minute-based limiting
   requestTimestamps.push(Date.now());
+
+  // Track for daily limiting
+  try {
+    const dailyCount = loadDailyRequestCount();
+    saveDailyRequestCount(dailyCount + 1);
+  } catch (error) {
+    console.error('Error tracking daily request:', error);
+  }
+}
+
+// Get current API usage statistics
+export function getApiUsageStats(): { minuteCount: number, dailyCount: number, minuteLimit: number, dailyLimit: number } {
+  // Clean up old timestamps
+  const now = Date.now();
+  const oneMinuteAgo = now - 60 * 1000;
+  while (requestTimestamps.length > 0 && requestTimestamps[0] < oneMinuteAgo) {
+    requestTimestamps.shift();
+  }
+
+  return {
+    minuteCount: requestTimestamps.length,
+    dailyCount: loadDailyRequestCount(),
+    minuteLimit: MAX_REQUESTS_PER_MINUTE,
+    dailyLimit: MAX_REQUESTS_PER_DAY
+  };
 }
 
 // Building filter criteria interface
@@ -99,7 +181,12 @@ export async function getBuildingSummary(buildingData: any): Promise<BuildingSum
 
   // Check rate limit
   if (!checkRateLimit()) {
-    throw new Error('Rate limit exceeded. Please try again later.');
+    const stats = getApiUsageStats();
+    if (stats.dailyCount >= stats.dailyLimit) {
+      throw new Error('Daily API limit exceeded. Please try again tomorrow.');
+    } else {
+      throw new Error('Rate limit exceeded. Please try again in a minute.');
+    }
   }
 
   try {
@@ -235,7 +322,12 @@ export interface LLMQueryResponse {
 export async function sendQuery(query: string, context?: any): Promise<LLMQueryResponse> {
   // Check rate limit
   if (!checkRateLimit()) {
-    throw new Error('Rate limit exceeded. Please try again later.');
+    const stats = getApiUsageStats();
+    if (stats.dailyCount >= stats.dailyLimit) {
+      throw new Error('Daily API limit exceeded. Please try again tomorrow.');
+    } else {
+      throw new Error('Rate limit exceeded. Please try again in a minute.');
+    }
   }
 
   try {
@@ -267,7 +359,12 @@ export async function sendQuery(query: string, context?: any): Promise<LLMQueryR
 export async function queryBuildings(query: string): Promise<BuildingQueryResponse> {
   // Check rate limit
   if (!checkRateLimit()) {
-    throw new Error('Rate limit exceeded. Please try again later.');
+    const stats = getApiUsageStats();
+    if (stats.dailyCount >= stats.dailyLimit) {
+      throw new Error('Daily API limit exceeded. Please try again tomorrow.');
+    } else {
+      throw new Error('Rate limit exceeded. Please try again in a minute.');
+    }
   }
 
   try {

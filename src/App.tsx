@@ -3,6 +3,7 @@ import { Scene } from './components/Scene';
 import { BuildingIcon } from './components/BuildingIcon';
 import { LoadingScreen } from './components/LoadingScreen';
 import { FilterNotification } from './components/FilterNotification';
+import { ApiUsageStats } from './components/ApiUsageStats';
 import { BuildingFilter, queryBuildings } from './services/llmService';
 
 function App() {
@@ -214,6 +215,9 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* API Usage Stats */}
+      <ApiUsageStats />
     </div>
   );
 }

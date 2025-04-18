@@ -6,6 +6,7 @@ import { coordsToShape, normalizeCoordinates, calculateCenter, checkBuildingColl
 import { BuildingInfo } from './BuildingInfo';
 import { BuildingOutline } from './BuildingOutline';
 import { getBuildingSummary, preloadBuildingSummaries, BuildingFilter, isBuildingSummaryCached } from '../services/llmService';
+import { checkOverpassRateLimit, trackOverpassRequest, getCachedOverpassData, cacheOverpassData } from '../services/overpassService';
 // import type { GeoJSONFeature } from '../types';
 import type { ThreeEvent } from '@react-three/fiber';
 
@@ -233,6 +234,20 @@ export function Buildings({ filters = [], onFilteredCountChange, onBuildingSelec
   useEffect(() => {
     async function fetchBuildings() {
       try {
+        // Check if we have cached data first
+        const cachedData = getCachedOverpassData('buildings');
+        if (cachedData) {
+          processBuildings(cachedData);
+          return;
+        }
+
+        // Check if we're within rate limits
+        if (!checkOverpassRateLimit()) {
+          console.error('Overpass API rate limit exceeded. Using fallback data.');
+          // TODO: Add fallback data or show error message
+          return;
+        }
+
         // Overpass API query for buildings in downtown Calgary - expanded to include Calgary Tower
         const query = `
           [out:json][timeout:30];
@@ -245,21 +260,38 @@ export function Buildings({ filters = [], onFilteredCountChange, onBuildingSelec
           out skel qt;
         `;
 
+        // Track this request for rate limiting
+        trackOverpassRequest();
+
         const response = await axios.post('https://overpass-api.de/api/interpreter', query);
 
+        // Cache the response data
+        cacheOverpassData('buildings', response.data);
+
+        // Process the building data
+        processBuildings(response.data);
+
+      } catch (error) {
+        console.error('Error fetching building data:', error);
+      }
+    }
+
+    // Function to process building data from either API or cache
+    function processBuildings(data: any) {
+      try {
         // Extract nodes and ways
         const nodes = new Map();
         const ways: BuildingWay[] = [];
 
         // First, collect all nodes
-        response.data.elements.forEach((element: any) => {
+        data.elements.forEach((element: any) => {
           if (element.type === 'node') {
             nodes.set(element.id, [element.lon, element.lat]);
           }
         });
 
         // Then, process ways (buildings)
-        response.data.elements.forEach((element: any) => {
+        data.elements.forEach((element: any) => {
           if (element.type === 'way' && element.tags?.building) {
             const coordinates = element.nodes.map((nodeId: number) => nodes.get(nodeId));
             if (coordinates.length > 2) {
@@ -414,7 +446,7 @@ export function Buildings({ filters = [], onFilteredCountChange, onBuildingSelec
         // This will fetch data for the first few buildings and cache it
         preloadBuildingSummaries(buildingMeshes.map(mesh => mesh.userData));
       } catch (error) {
-        console.error('Error fetching building data:', error);
+        console.error('Error processing building data:', error);
       }
     }
 

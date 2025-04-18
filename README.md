@@ -4,6 +4,12 @@ An interactive 3D cityscape visualization application built with Next.js, React,
 
 ![Demo of the 3D City Dashboard](demo-use.png)
 
+## Demo Video
+
+Check out the demo video to see the application in action, including the API rate limiting feature:
+
+[Watch Demo Video](demo.mp4)
+
 ## Project Overview
 
 This project focuses on creating a web-based dashboard that visualizes Calgary's urban landscape with natural language querying capabilities. The application fetches building data from OpenStreetMap, processes it for 3D visualization, and integrates with Google's Gemini 2.5 Pro LLM to provide intelligent responses to user queries.
@@ -15,23 +21,28 @@ This project focuses on creating a web-based dashboard that visualizes Calgary's
 - **Natural Language Building Queries**: Filter buildings using natural language (e.g., "show buildings taller than 100 meters" or "highlight commercial buildings")
 - **Realistic Ground Plane**: High-performance ground with reflections and optimized rendering
 - **LLM Integration**: Ask questions about the city and buildings using Google's Gemini 2.5 Pro
+- **API Rate Limiting**: Prevents API overusage with daily, hourly, and per-minute limits
+- **API Usage Statistics**: Real-time display of API usage with visual indicators
 - **High Performance Rendering**: Optimized for smooth performance with many buildings
 
 ## Tech Stack
 
 ### Frontend
+
 - React with TypeScript
 - Three.js for 3D rendering
 - React Three Fiber & Drei for React integration with Three.js
 - Tailwind CSS for styling
 
 ### Backend
+
 - Flask for API endpoints
 - Google Gemini 2.5 Pro for AI integration
 
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js (v16+)
 - Python (v3.8+)
 - Google Gemini API key (get one at [Google AI Studio](https://ai.google.dev/))
@@ -39,12 +50,14 @@ This project focuses on creating a web-based dashboard that visualizes Calgary's
 ### Frontend Setup
 
 1. Install dependencies:
-   ```
+
+   ```bash
    npm install
    ```
 
 2. Start the development server:
-   ```
+
+   ```bash
    npm run dev
    ```
 
@@ -53,12 +66,14 @@ This project focuses on creating a web-based dashboard that visualizes Calgary's
 ### Backend Setup
 
 1. Navigate to the backend directory:
-   ```
+
+   ```bash
    cd backend
    ```
 
 2. Create a virtual environment:
-   ```
+
+   ```bash
    python -m venv venv
    ```
 
@@ -67,22 +82,26 @@ This project focuses on creating a web-based dashboard that visualizes Calgary's
    - macOS/Linux: `source venv/bin/activate`
 
 4. Install dependencies:
-   ```
+
+   ```bash
    pip install -r requirements.txt
    ```
 
 5. Create a `.env` file:
-   ```
+
+   ```bash
    cp .env.example .env
    ```
 
 6. Add your Gemini API key to the `.env` file:
-   ```
+
+   ```env
    GEMINI_API_KEY=your_api_key_here
    ```
 
 7. Start the Flask server:
-   ```
+
+   ```bash
    python app.py
    ```
 
@@ -108,6 +127,7 @@ This project focuses on creating a web-based dashboard that visualizes Calgary's
     - "show me art deco buildings"
     - "highlight culturally significant buildings"
 - **Ask Questions**: Use the AI chat interface to ask questions about the city and architecture
+- **Monitor API Usage**: View the API usage statistics in the bottom-right corner to track your usage and avoid hitting rate limits
 
 ## Project Structure
 

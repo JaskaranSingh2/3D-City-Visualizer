@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import * as THREE from 'three';
 import axios from 'axios';
 import { coordsToShape, normalizeCoordinates, calculateCenter } from '../utils/geometry';
+import { checkOverpassRateLimit, trackOverpassRequest, getCachedOverpassData, cacheOverpassData } from '../services/overpassService';
 
 export function Roads() {
   const [roads, setRoads] = useState<THREE.Group[]>([]);
@@ -9,6 +10,20 @@ export function Roads() {
   useEffect(() => {
     async function fetchRoads() {
       try {
+        // Check if we have cached data first
+        const cachedData = getCachedOverpassData('roads');
+        if (cachedData) {
+          processRoads(cachedData);
+          return;
+        }
+
+        // Check if we're within rate limits
+        if (!checkOverpassRateLimit()) {
+          console.error('Overpass API rate limit exceeded. Using fallback data.');
+          // TODO: Add fallback data or show error message
+          return;
+        }
+
         // Overpass API query for roads in downtown Calgary - using the same bounding box as buildings
         const query = `
           [out:json][timeout:25];
@@ -19,21 +34,38 @@ export function Roads() {
           out body;
         `;
 
+        // Track this request for rate limiting
+        trackOverpassRequest();
+
         const response = await axios.post('https://overpass-api.de/api/interpreter', query);
 
+        // Cache the response data
+        cacheOverpassData('roads', response.data);
+
+        // Process the road data
+        processRoads(response.data);
+
+      } catch (error) {
+        console.error('Error fetching road data:', error);
+      }
+    }
+
+    // Function to process road data from either API or cache
+    function processRoads(data: any) {
+      try {
         // Extract nodes and ways
         const nodes = new Map();
         const ways: Array<{coordinates: number[][], tags: any}> = [];
 
         // First, collect all nodes
-        response.data.elements.forEach((element: any) => {
+        data.elements.forEach((element: any) => {
           if (element.type === 'node') {
             nodes.set(element.id, [element.lon, element.lat]);
           }
         });
 
         // Then, process ways (roads)
-        response.data.elements.forEach((element: any) => {
+        data.elements.forEach((element: any) => {
           if (element.type === 'way' && element.tags?.highway) {
             const coordinates = element.nodes.map((nodeId: number) => nodes.get(nodeId));
             if (coordinates.length > 1) {
@@ -191,7 +223,7 @@ export function Roads() {
 
         setRoads(roadMeshes);
       } catch (error) {
-        console.error('Error fetching road data:', error);
+        console.error('Error processing road data:', error);
       }
     }
 
