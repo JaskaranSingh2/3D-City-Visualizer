@@ -89,3 +89,12 @@ Thumbs.db
 .cache/
 .temp/
 .tmp/
+
+# Media file metadata
+*.mp4.meta
+*.mov.meta
+*.webm.meta
+*.png.meta
+*.jpg.meta
+*.jpeg.meta
+*.gif.meta
