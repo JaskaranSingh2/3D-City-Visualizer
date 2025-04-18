@@ -117,3 +117,7 @@ This project focuses on creating a web-based dashboard that visualizes Calgary's
 - `backend/`: Flask backend
   - `app.py`: Main Flask application
   - `requirements.txt`: Python dependencies
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
