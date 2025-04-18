@@ -2,6 +2,8 @@
 
 An interactive 3D cityscape visualization application built with Next.js, React, Three.js, and Gemini 2.5 Pro integration. This application allows users to explore a 3D model of Calgary's downtown area, view building information, and query buildings using natural language.
 
+![Demo of the 3D City Dashboard](demo-use.png)
+
 ## Project Overview
 
 This project focuses on creating a web-based dashboard that visualizes Calgary's urban landscape with natural language querying capabilities. The application fetches building data from OpenStreetMap, processes it for 3D visualization, and integrates with Google's Gemini 2.5 Pro LLM to provide intelligent responses to user queries.
