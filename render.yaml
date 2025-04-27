@@ -8,6 +8,5 @@ services:
     envVars:
       - key: GEMINI_API_KEY
         sync: false
-      # Add any other environment variables here
     autoDeploy: true
-    rootDir: .
+    rootDir: backend
