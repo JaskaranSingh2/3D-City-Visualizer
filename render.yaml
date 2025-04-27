@@ -1,5 +1,6 @@
 services:
   - type: web
+    runtime: python
     name: 3d-city-backend
     plan: free
     buildCommand: "pip install -r requirements.txt"
