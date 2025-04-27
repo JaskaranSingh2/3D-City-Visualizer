@@ -98,3 +98,6 @@ Thumbs.db
 *.jpg.meta
 *.jpeg.meta
 *.gif.meta
+
+# Local Netlify folder
+.netlify
