@@ -29,7 +29,11 @@ genai.configure(api_key=api_key)
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  # Enable CORS for all routes with proper configuration
+import os
+
+# Set allowed origins for CORS
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://your-frontend.netlify.app")
+CORS(app, resources={r"/*": {"origins": [FRONTEND_URL]}})  # Restrict CORS for production
 
 # Add a root route for basic testing
 @app.route('/', methods=['GET'])
@@ -764,5 +768,6 @@ def get_building_context():
             "error": str(e)
         }), 500
 
+# For local development only
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5002)
+    app.run(debug=True, host='0.0.0.0', port=5000)

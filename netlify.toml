@@ -8,8 +8,8 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "http://localhost:5000/api/:splat"
+  to = "https://3d-city-backend.onrender.com/api/:splat"
   status = 200
   force = true
 
-# NOTE: For production, change the 'to' field in redirects to your deployed backend URL
+# NOTE: For development, use localhost. For production, this is set to your deployed backend URL.
