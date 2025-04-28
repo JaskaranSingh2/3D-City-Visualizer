@@ -9,7 +9,7 @@ const requestTimestamps: number[] = [];
 const API_BASE_URL = "/api"; // Use relative path for API requests (will be redirected by Netlify in production)
 const API_TIMEOUT = 30000; // 30 seconds timeout
 
-// Debug flag to log API calls
+// Debug flag to log API calls (set to false in production)
 const DEBUG_API_CALLS = true;
 
 // Storage keys for persisting usage data

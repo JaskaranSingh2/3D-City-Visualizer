@@ -33,6 +33,7 @@ import os
 
 # Set allowed origins for CORS
 FRONTEND_URL = os.getenv("FRONTEND_URL", "*")  # Allow all origins by default, can be restricted in production
+# For security in production, you should set FRONTEND_URL to your Netlify domain
 CORS(app, resources={r"/*": {"origins": "*"}})  # Allow all origins for now to simplify debugging
 
 # Add a root route for basic testing
