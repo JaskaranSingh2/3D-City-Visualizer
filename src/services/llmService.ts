@@ -210,7 +210,7 @@ export async function getBuildingSummary(
 
 				// Make API call to get building context
 				const contextResponse = await apiClient.post(
-					"/api/building-context",
+					"/building-context",
 					contextPayload
 				);
 				buildingContext = contextResponse.data;
@@ -263,7 +263,7 @@ export async function getBuildingSummary(
 		}
 
 		// Make API call to backend
-		const response = await apiClient.post("/api/summary", payload);
+		const response = await apiClient.post("/summary", payload);
 
 		// Log response if debug is enabled
 		if (DEBUG_API_CALLS) {
@@ -353,7 +353,7 @@ export async function sendQuery(
 		};
 
 		// Make API call to backend
-		const response = await apiClient.post("/api/query", payload);
+		const response = await apiClient.post("/query", payload);
 		return response.data;
 	} catch (error) {
 		console.error("Error sending query to LLM:", error);
@@ -382,7 +382,7 @@ export async function queryBuildings(
 		};
 
 		// Make API call to backend
-		const response = await apiClient.post("/api/filter", payload);
+		const response = await apiClient.post("/filter", payload);
 		return response.data;
 	} catch (error) {
 		console.error("Error querying buildings:", error);
