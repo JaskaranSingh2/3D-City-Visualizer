@@ -5,7 +5,7 @@ import axios from "axios";
 const requestTimestamps: number[] = [];
 
 // API configuration
-const API_BASE_URL = "/api"; // Use relative path for API requests (will be redirected by Netlify in production)
+const API_BASE_URL = ""; // Empty base URL to avoid double /api/ in paths
 const API_TIMEOUT = 30000; // 30 seconds timeout
 
 // Debug flag to log API calls (set to false in production)
