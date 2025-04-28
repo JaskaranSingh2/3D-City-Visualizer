@@ -1,8 +1,7 @@
 import axios from "axios";
 
-// Rate limiting configuration
-const MAX_REQUESTS_PER_MINUTE = 10;
-const MAX_REQUESTS_PER_DAY = 100; // Daily limit to avoid overusage
+// No rate limiting - unlimited usage
+// Keeping arrays for tracking but not enforcing limits
 const requestTimestamps: number[] = [];
 
 // API configuration
@@ -84,25 +83,18 @@ function resetDailyCount(): void {
 	}
 }
 
-// Check if we're within rate limits
+// Always return true for unlimited usage
 function checkRateLimit(): boolean {
 	const now = Date.now();
 
-	// Check minute-based rate limit
-	// Remove timestamps older than 1 minute
+	// Still clean up old timestamps for stats tracking
 	const oneMinuteAgo = now - 60 * 1000;
 	while (requestTimestamps.length > 0 && requestTimestamps[0] < oneMinuteAgo) {
 		requestTimestamps.shift();
 	}
 
-	// Check daily rate limit
-	const dailyCount = loadDailyRequestCount();
-
-	// Return true only if both limits are satisfied
-	return (
-		requestTimestamps.length < MAX_REQUESTS_PER_MINUTE &&
-		dailyCount < MAX_REQUESTS_PER_DAY
-	);
+	// Always allow requests
+	return true;
 }
 
 // Add current timestamp to the requests array and increment daily count
@@ -119,7 +111,7 @@ function trackRequest(): void {
 	}
 }
 
-// Get current API usage statistics
+// Get current API usage statistics - now with unlimited usage
 export function getApiUsageStats(): {
 	minuteCount: number;
 	dailyCount: number;
@@ -136,8 +128,8 @@ export function getApiUsageStats(): {
 	return {
 		minuteCount: requestTimestamps.length,
 		dailyCount: loadDailyRequestCount(),
-		minuteLimit: MAX_REQUESTS_PER_MINUTE,
-		dailyLimit: MAX_REQUESTS_PER_DAY,
+		minuteLimit: 999999, // Effectively unlimited
+		dailyLimit: 999999, // Effectively unlimited
 	};
 }
 
@@ -192,15 +184,7 @@ export async function getBuildingSummary(
 		return buildingSummaryCache[cacheKey].data;
 	}
 
-	// Check rate limit
-	if (!checkRateLimit()) {
-		const stats = getApiUsageStats();
-		if (stats.dailyCount >= stats.dailyLimit) {
-			throw new Error("Daily API limit exceeded. Please try again tomorrow.");
-		} else {
-			throw new Error("Rate limit exceeded. Please try again in a minute.");
-		}
-	}
+	// No rate limiting - always proceed with request
 
 	try {
 		trackRequest();
@@ -354,15 +338,7 @@ export async function sendQuery(
 	query: string,
 	context?: any
 ): Promise<LLMQueryResponse> {
-	// Check rate limit
-	if (!checkRateLimit()) {
-		const stats = getApiUsageStats();
-		if (stats.dailyCount >= stats.dailyLimit) {
-			throw new Error("Daily API limit exceeded. Please try again tomorrow.");
-		} else {
-			throw new Error("Rate limit exceeded. Please try again in a minute.");
-		}
-	}
+	// No rate limiting - always proceed with request
 
 	try {
 		trackRequest();
@@ -394,15 +370,7 @@ export async function sendQuery(
 export async function queryBuildings(
 	query: string
 ): Promise<BuildingQueryResponse> {
-	// Check rate limit
-	if (!checkRateLimit()) {
-		const stats = getApiUsageStats();
-		if (stats.dailyCount >= stats.dailyLimit) {
-			throw new Error("Daily API limit exceeded. Please try again tomorrow.");
-		} else {
-			throw new Error("Rate limit exceeded. Please try again in a minute.");
-		}
-	}
+	// No rate limiting - always proceed with request
 
 	try {
 		trackRequest();
@@ -443,8 +411,8 @@ export async function isBuildingSummaryCached(
 export async function preloadBuildingSummaries(
 	buildings: any[]
 ): Promise<void> {
-	// Only preload up to 5 buildings to avoid rate limiting
-	const buildingsToPreload = buildings.slice(0, 5);
+	// Preload all buildings - no rate limiting
+	const buildingsToPreload = buildings;
 
 	console.log(
 		`Preloading summaries for ${buildingsToPreload.length} buildings`
