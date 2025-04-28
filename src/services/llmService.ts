@@ -11,28 +11,6 @@ const API_TIMEOUT = 30000; // 30 seconds timeout
 // Debug flag to log API calls (set to false in production)
 const DEBUG_API_CALLS = true;
 
-// Add enhanced debugging
-const logApiCall = (endpoint: string, payload: any) => {
-	console.log(`🚀 API Request to ${endpoint}:`, payload);
-};
-
-const logApiResponse = (endpoint: string, response: any) => {
-	console.log(`✅ API Response from ${endpoint}:`, response);
-};
-
-const logApiError = (endpoint: string, error: any) => {
-	console.error(`❌ API Error from ${endpoint}:`, error);
-	if (error.response) {
-		console.error("Response data:", error.response.data);
-		console.error("Response status:", error.response.status);
-		console.error("Response headers:", error.response.headers);
-	} else if (error.request) {
-		console.error("Request made but no response received:", error.request);
-	} else {
-		console.error("Error setting up request:", error.message);
-	}
-};
-
 // Storage keys for persisting usage data
 const STORAGE_KEY_DAILY_COUNT = "api_daily_request_count";
 const STORAGE_KEY_DATE = "api_request_date";
@@ -231,7 +209,6 @@ export async function getBuildingSummary(
 				}
 
 				// Make API call to get building context
-				logApiCall("/api/building-context", contextPayload);
 				const contextResponse = await apiClient.post(
 					"/api/building-context",
 					contextPayload
@@ -286,36 +263,28 @@ export async function getBuildingSummary(
 		}
 
 		// Make API call to backend
-		logApiCall("/api/summary", payload);
-		try {
-			const response = await apiClient.post("/api/summary", payload);
+		const response = await apiClient.post("/api/summary", payload);
 
-			// Log response if debug is enabled
-			if (DEBUG_API_CALLS) {
-				console.log("Building summary response:", response.data);
-			}
+		// Log response if debug is enabled
+		if (DEBUG_API_CALLS) {
+			console.log("Building summary response:", response.data);
+		}
 
-			logApiResponse("/api/summary", response.data);
+		// Cache the response
+		buildingSummaryCache[cacheKey] = {
+			data: response.data,
+			timestamp: now,
+		};
 
-			// Cache the response
-			buildingSummaryCache[cacheKey] = {
+		// Also cache by ID only for backward compatibility
+		if (buildingId !== cacheKey) {
+			buildingSummaryCache[buildingId] = {
 				data: response.data,
 				timestamp: now,
 			};
-
-			// Also cache by ID only for backward compatibility
-			if (buildingId !== cacheKey) {
-				buildingSummaryCache[buildingId] = {
-					data: response.data,
-					timestamp: now,
-				};
-			}
-
-			return response.data;
-		} catch (error) {
-			logApiError("/api/summary", error);
-			throw error;
 		}
+
+		return response.data;
 	} catch (error) {
 		console.error("Error fetching building summary:", error);
 
@@ -384,15 +353,8 @@ export async function sendQuery(
 		};
 
 		// Make API call to backend
-		logApiCall("/api/query", payload);
-		try {
-			const response = await apiClient.post("/api/query", payload);
-			logApiResponse("/api/query", response.data);
-			return response.data;
-		} catch (error) {
-			logApiError("/api/query", error);
-			throw error;
-		}
+		const response = await apiClient.post("/api/query", payload);
+		return response.data;
 	} catch (error) {
 		console.error("Error sending query to LLM:", error);
 
@@ -420,15 +382,8 @@ export async function queryBuildings(
 		};
 
 		// Make API call to backend
-		logApiCall("/api/filter", payload);
-		try {
-			const response = await apiClient.post("/api/filter", payload);
-			logApiResponse("/api/filter", response.data);
-			return response.data;
-		} catch (error) {
-			logApiError("/api/filter", error);
-			throw error;
-		}
+		const response = await apiClient.post("/api/filter", payload);
+		return response.data;
 	} catch (error) {
 		console.error("Error querying buildings:", error);
 
